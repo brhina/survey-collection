@@ -1,35 +1,41 @@
-import express, { Request, Response, NextFunction } from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import connectDB from './config/db';
-import surveyRoutes from './routes/surveys';
-import responseRoutes from './routes/responses';
+import { app } from './app';
+import { env } from './config/env';
+import { connectDB, disconnectDB } from './config/db';
 
-dotenv.config();
+const startServer = async (): Promise<void> => {
+  // Connect to database
+  await connectDB();
 
-const app = express();
+  const server = app.listen(env.PORT, () => {
+    console.log(`Survey server running in ${env.NODE_ENV} mode on port ${env.PORT}`);
+    console.log(`Health check: http://localhost:${env.PORT}/healthz`);
+    console.log(`API v1: http://localhost:${env.PORT}/api/v1`);
+  });
 
-// Connect to MongoDB
-connectDB();
+  // Graceful Shutdown
+  const gracefulShutdown = async (signal: string) => {
+    console.log(`Received ${signal}. Shutting down gracefully...`);
+    server.close(async () => {
+      console.log('HTTP server closed.');
+      await disconnectDB();
+      console.log('Database connection closed.');
+      process.exit(0);
+    });
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+    // Force close if graceful shutdown takes too long
+    setTimeout(() => {
+      console.error('Could not close connections in time, forcefully shutting down');
+      process.exit(1);
+    }, 10000);
+  };
 
-// Routes
-app.use('/api/surveys', surveyRoutes);
-app.use('/api/responses', responseRoutes);
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+};
 
-// Error handling middleware
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
-});
-
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+startServer().catch((err) => {
+  console.error('Fatal bootstrap error:', err);
+  process.exit(1);
 });
 
 export default app;
