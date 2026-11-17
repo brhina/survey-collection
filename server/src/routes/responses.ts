@@ -4,10 +4,12 @@ import {
   getSurveyResults,
   getAllResponses
 } from '../controllers/responseController';
+import { validate } from '../middlewares/validate';
+import { submitResponseSchema } from '../schemas/responseSchema';
 
 const router = Router();
 
-router.post('/', submitResponse);
+router.post('/', validate({ body: submitResponseSchema }), submitResponse);
 router.get('/survey/:surveyId/results', getSurveyResults);
 router.get('/survey/:surveyId', getAllResponses);
 
