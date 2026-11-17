@@ -1,24 +1,33 @@
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import { env } from './env';
 
 export const connectDB = async (): Promise<void> => {
   try {
-    const mongoUri = process.env.MONGO_URI;
-    if (!mongoUri) {
-      throw new Error('MONGO_URI is not defined in environment variables');
-    }
-    const conn = await mongoose.connect(mongoUri);
+    const conn = await mongoose.connect(env.MONGO_URI, {
+      serverSelectionTimeoutMS: 5000,
+      autoIndex: env.NODE_ENV !== 'production'
+    });
+
     console.log(`MongoDB Connected: ${conn.connection.host}`);
+
+    mongoose.connection.on('error', (err) => {
+      console.error(`MongoDB connection error: ${err.message}`);
+    });
+
+    mongoose.connection.on('disconnected', () => {
+      console.warn('MongoDB disconnected. Reconnecting...');
+    });
   } catch (error) {
-    if (error instanceof Error) {
-      console.error(`Error: ${error.message}`);
-    } else {
-      console.error('An unknown database connection error occurred');
+    const message = error instanceof Error ? error.message : 'Unknown database error';
+    console.error(`Database connection failed: ${message}`);
+    if (env.NODE_ENV === 'production') {
+      process.exit(1);
     }
-    process.exit(1);
   }
+};
+
+export const disconnectDB = async (): Promise<void> => {
+  await mongoose.disconnect();
 };
 
 export default connectDB;
