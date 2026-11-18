@@ -12,7 +12,7 @@ export class ExportService {
     const responses = await responseRepository.findAllBySurveyIdRaw(surveyId);
 
     // Build CSV Headers
-    const headers = ['Response ID', 'Submitted At', 'Completion Time (seconds)'];
+    const headers = ['Response ID', 'Respondent Email', 'Submitted At', 'Completion Time (seconds)'];
     survey.questions.forEach((q, idx) => {
       const sanitizedTitle = q.questionText.replace(/"/g, '""');
       headers.push(`"Q${idx + 1}: ${sanitizedTitle}"`);
@@ -23,6 +23,7 @@ export class ExportService {
     // Build data rows
     responses.forEach((resp) => {
       const respId = resp._id ? resp._id.toString() : '';
+      const email = (resp.respondentEmail || 'Anonymous').replace(/"/g, '""');
       const submittedAt = resp.submittedAt ? new Date(resp.submittedAt).toISOString() : '';
       const completionTime = resp.completionTimeSeconds || 0;
 
@@ -31,7 +32,7 @@ export class ExportService {
         answerMap.set(ans.questionId.toString(), ans.answer);
       });
 
-      const rowValues: string[] = [respId, submittedAt, completionTime.toString()];
+      const rowValues: string[] = [respId, `"${email}"`, submittedAt, completionTime.toString()];
 
       survey.questions.forEach((q) => {
         const qIdStr = q._id ? q._id.toString() : '';

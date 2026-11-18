@@ -127,11 +127,12 @@ const runSeed = async () => {
       title: 'University Campus Experience & Student Satisfaction 2026',
       description:
         'Annual university-wide survey assessing academic quality, campus facilities, digital infrastructure, and student support services.',
+      category: 'survey',
       creatorId: creatorUser._id,
       status: 'published',
       settings: {
         isAnonymous: false,
-        allowMultipleSubmissions: true,
+        allowMultipleSubmissions: false,
         requireAuth: false
       },
       questions: survey1Questions,
@@ -195,11 +196,12 @@ const runSeed = async () => {
       title: 'Remote Work & Engineering Team Wellness Pulse',
       description:
         'Quarterly engineering wellness feedback evaluating workload sustainability, team alignment, and focus culture.',
+      category: 'feedback',
       creatorId: adminUser._id,
       status: 'published',
       settings: {
         isAnonymous: false,
-        allowMultipleSubmissions: true,
+        allowMultipleSubmissions: false,
         requireAuth: false
       },
       questions: survey2Questions,
@@ -259,17 +261,86 @@ const runSeed = async () => {
     ];
 
     const survey3 = await Survey.create({
-      title: 'Product Experience & Usability Feedback - SurveyFlow',
+      title: 'Product Experience & Usability Audit - DataCollector',
       description:
-        'Help our product engineering team refine the questionnaire builder, analytics visualizations, and export features.',
+        'Help our product engineering team refine the data collection builder, analytics visualizations, and export features.',
+      category: 'inspection',
       creatorId: creatorUser._id,
       status: 'published',
       settings: {
         isAnonymous: false,
-        allowMultipleSubmissions: true,
+        allowMultipleSubmissions: false,
         requireAuth: false
       },
       questions: survey3Questions,
+      responseCount: 0
+    });
+
+    // Collector 4: Registration
+    const survey4Questions = [
+      {
+        _id: new Types.ObjectId(),
+        type: 'text' as const,
+        questionText: 'Full Legal Name',
+        isRequired: true,
+        order: 0
+      },
+      {
+        _id: new Types.ObjectId(),
+        type: 'email' as const,
+        questionText: 'Primary Work / University Email',
+        isRequired: true,
+        order: 1
+      },
+      {
+        _id: new Types.ObjectId(),
+        type: 'phone' as const,
+        questionText: 'Mobile / WhatsApp Contact Number',
+        isRequired: true,
+        order: 2
+      },
+      {
+        _id: new Types.ObjectId(),
+        type: 'dropdown' as const,
+        questionText: 'Primary Hackathon Track',
+        options: [
+          'Autonomous AI Agents & Workflows',
+          'Full-Stack Web & Cloud Systems',
+          'Real-time Data & Analytics Platforms',
+          'Open Innovation & Social Impact'
+        ],
+        isRequired: true,
+        order: 3
+      },
+      {
+        _id: new Types.ObjectId(),
+        type: 'number' as const,
+        questionText: 'Expected Team Size (1 to 5 members)',
+        isRequired: true,
+        order: 4
+      },
+      {
+        _id: new Types.ObjectId(),
+        type: 'long-text' as const,
+        questionText: 'Dietary preferences, accessibility requirements, or special notes',
+        isRequired: false,
+        order: 5
+      }
+    ];
+
+    const survey4 = await Survey.create({
+      title: 'AI & Cloud Hackathon 2026 - Participant Registration',
+      description:
+        'Official attendee intake and team registration form. Guarantees 1 registration per unique email address.',
+      category: 'registration',
+      creatorId: creatorUser._id,
+      status: 'published',
+      settings: {
+        isAnonymous: false,
+        allowMultipleSubmissions: false,
+        requireAuth: false
+      },
+      questions: survey4Questions,
       responseCount: 0
     });
 
@@ -344,8 +415,22 @@ const runSeed = async () => {
       }
     ];
 
+    const survey1Emails = [
+      'alex.rivera@student.edu',
+      'elena.rostova@university.edu',
+      'marcus.vance@campus.edu',
+      'priya.sharma@campus.edu',
+      'david.chen@engineering.edu',
+      'sarah.miller@humanities.edu',
+      'jordan.lee@business.edu',
+      'hannah.brown@science.edu',
+      'carlos.rodriguez@cs.edu',
+      'aisha.noor@gradstudies.edu'
+    ];
+
     const survey1Docs = survey1SampleData.map((item, idx) => ({
       surveyId: survey1._id,
+      respondentEmail: survey1Emails[idx] || `student${idx + 1}@university.edu`,
       respondentId: idx === 0 ? studentUser._id : null,
       answers: [
         { questionId: survey1Questions[0]._id, questionType: 'multiple-choice', answer: item.faculty },
@@ -401,8 +486,17 @@ const runSeed = async () => {
       }
     ];
 
+    const survey2Emails = [
+      'dev.marcus@techcorp.io',
+      'elena.frontend@techcorp.io',
+      'sam.architect@techcorp.io',
+      'priya.devops@techcorp.io',
+      'alex.mobile@techcorp.io'
+    ];
+
     const survey2Docs = survey2SampleData.map((item, idx) => ({
       surveyId: survey2._id,
+      respondentEmail: survey2Emails[idx],
       answers: [
         { questionId: survey2Questions[0]._id, questionType: 'rating', answer: item.paceRating },
         { questionId: survey2Questions[1]._id, questionType: 'multiple-choice', answer: item.dist },
@@ -449,8 +543,16 @@ const runSeed = async () => {
       }
     ];
 
+    const survey3Emails = [
+      'ux.researcher@product.org',
+      'product.manager@startup.com',
+      'qa.lead@qa-lab.net',
+      'cto@enterprise-solutions.com'
+    ];
+
     const survey3Docs = survey3SampleData.map((item, idx) => ({
       surveyId: survey3._id,
+      respondentEmail: survey3Emails[idx],
       answers: [
         { questionId: survey3Questions[0]._id, questionType: 'rating', answer: item.ease },
         { questionId: survey3Questions[1]._id, questionType: 'multiple-choice', answer: item.freq },
@@ -465,14 +567,50 @@ const runSeed = async () => {
     await Response.insertMany(survey3Docs);
     await Survey.updateOne({ _id: survey3._id }, { responseCount: survey3Docs.length });
 
+    // Seed sample responses for Collector 4 (Registration)
+    const survey4Docs = [
+      {
+        surveyId: survey4._id,
+        respondentEmail: 'jordan.taylor@innovate.dev',
+        answers: [
+          { questionId: survey4Questions[0]._id, questionType: 'text', answer: 'Jordan Taylor' },
+          { questionId: survey4Questions[1]._id, questionType: 'email', answer: 'jordan.taylor@innovate.dev' },
+          { questionId: survey4Questions[2]._id, questionType: 'phone', answer: '+1 (555) 234-5678' },
+          { questionId: survey4Questions[3]._id, questionType: 'dropdown', answer: 'Autonomous AI Agents & Workflows' },
+          { questionId: survey4Questions[4]._id, questionType: 'number', answer: 4 },
+          { questionId: survey4Questions[5]._id, questionType: 'long-text', answer: 'Vegetarian lunch request.' }
+        ],
+        completionTimeSeconds: 52,
+        submittedAt: new Date(Date.now() - 3600000 * 2)
+      },
+      {
+        surveyId: survey4._id,
+        respondentEmail: 'maya.lin@cloudscale.net',
+        answers: [
+          { questionId: survey4Questions[0]._id, questionType: 'text', answer: 'Maya Lin' },
+          { questionId: survey4Questions[1]._id, questionType: 'email', answer: 'maya.lin@cloudscale.net' },
+          { questionId: survey4Questions[2]._id, questionType: 'phone', answer: '+1 (555) 987-6543' },
+          { questionId: survey4Questions[3]._id, questionType: 'dropdown', answer: 'Full-Stack Web & Cloud Systems' },
+          { questionId: survey4Questions[4]._id, questionType: 'number', answer: 3 },
+          { questionId: survey4Questions[5]._id, questionType: 'long-text', answer: 'Wheelchair ramp access required.' }
+        ],
+        completionTimeSeconds: 64,
+        submittedAt: new Date(Date.now() - 3600000 * 12)
+      }
+    ];
+
+    await Response.insertMany(survey4Docs);
+    await Survey.updateOne({ _id: survey4._id }, { responseCount: survey4Docs.length });
+
     console.log(`
 ======================================================
   DATABASE SEED COMPLETED SUCCESSFULLY!
 ======================================================
-  Surveys Seeded: 3
-    1. "${survey1.title}" (${survey1Docs.length} responses)
-    2. "${survey2.title}" (${survey2Docs.length} responses)
-    3. "${survey3.title}" (${survey3Docs.length} responses)
+  Data Collectors & Surveys Seeded: 4
+    1. "${survey1.title}" [${survey1.category}] (${survey1Docs.length} unique responses)
+    2. "${survey2.title}" [${survey2.category}] (${survey2Docs.length} unique responses)
+    3. "${survey3.title}" [${survey3.category}] (${survey3Docs.length} unique responses)
+    4. "${survey4.title}" [${survey4.category}] (${survey4Docs.length} unique responses)
 
   Sample Logins:
     Admin: admin@surveyflow.com / admin123

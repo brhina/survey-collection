@@ -1,5 +1,14 @@
 import { z } from 'zod';
 
+export const collectorCategoryEnum = z.enum([
+  'survey',
+  'registration',
+  'feedback',
+  'inspection',
+  'application',
+  'general'
+]);
+
 export const questionTypeEnum = z.enum([
   'text',
   'long-text',
@@ -9,7 +18,10 @@ export const questionTypeEnum = z.enum([
   'likert',
   'dropdown',
   'nps',
-  'date'
+  'date',
+  'number',
+  'email',
+  'phone'
 ]);
 
 export const questionValidationSchema = z.object({
@@ -45,6 +57,7 @@ export const surveySettingsSchema = z.object({
 export const createSurveySchema = z.object({
   title: z.string().min(1, 'Survey title is required').max(200).trim(),
   description: z.string().min(1, 'Survey description is required').max(2000).trim(),
+  category: collectorCategoryEnum.optional().default('general'),
   status: z.enum(['draft', 'published', 'closed', 'archived']).optional().default('published'),
   settings: surveySettingsSchema.optional(),
   questions: z.array(questionInputSchema).min(1, 'Survey must include at least one question')
@@ -56,6 +69,7 @@ export const surveyQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),
   limit: z.coerce.number().int().min(1).max(100).optional().default(10),
   status: z.enum(['draft', 'published', 'closed', 'archived']).optional(),
+  category: collectorCategoryEnum.optional(),
   search: z.string().trim().optional(),
   all: z.coerce.boolean().optional()
 });

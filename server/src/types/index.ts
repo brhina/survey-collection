@@ -20,6 +20,14 @@ export interface IAuthUser {
   name: string;
 }
 
+export type CollectorCategory =
+  | 'survey'
+  | 'registration'
+  | 'feedback'
+  | 'inspection'
+  | 'application'
+  | 'general';
+
 export type QuestionType =
   | 'text'
   | 'long-text'
@@ -29,7 +37,10 @@ export type QuestionType =
   | 'dropdown'
   | 'likert'
   | 'nps'
-  | 'date';
+  | 'date'
+  | 'number'
+  | 'email'
+  | 'phone';
 
 export type SurveyStatus = 'draft' | 'published' | 'closed' | 'archived';
 
@@ -74,6 +85,7 @@ export interface ISurvey {
   _id?: Types.ObjectId | string;
   title: string;
   description: string;
+  category?: CollectorCategory;
   creatorId?: Types.ObjectId | IUser | string;
   status: SurveyStatus;
   settings?: ISurveySettings;
@@ -93,6 +105,7 @@ export interface IAnswer {
 export interface IResponse {
   _id?: Types.ObjectId | string;
   surveyId: Types.ObjectId | ISurvey | string;
+  respondentEmail: string;
   respondentId?: Types.ObjectId | IUser | string | null;
   respondentHash?: string | null;
   answers: IAnswer[];
@@ -122,6 +135,7 @@ export interface PaginationParams {
   page: number;
   limit: number;
   status?: SurveyStatus;
+  category?: CollectorCategory;
   search?: string;
   creatorId?: string;
 }

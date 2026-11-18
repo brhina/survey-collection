@@ -10,19 +10,25 @@ export class ResponseRepository {
 
   async findExistingSubmission(params: {
     surveyId: string | Types.ObjectId;
+    respondentEmail?: string | null;
     respondentId?: string | Types.ObjectId | null;
     respondentHash?: string | null;
   }): Promise<IResponse | null> {
-    const { surveyId, respondentId, respondentHash } = params;
+    const { surveyId, respondentEmail, respondentId, respondentHash } = params;
 
     const conditions: Array<Record<string, unknown>> = [];
+    const sId = new Types.ObjectId(surveyId);
 
-    if (respondentId) {
-      conditions.push({ surveyId: new Types.ObjectId(surveyId), respondentId: new Types.ObjectId(respondentId) });
+    if (respondentEmail) {
+      conditions.push({ surveyId: sId, respondentEmail: respondentEmail.trim().toLowerCase() });
     }
 
-    if (respondentHash) {
-      conditions.push({ surveyId: new Types.ObjectId(surveyId), respondentHash });
+    if (respondentId) {
+      conditions.push({ surveyId: sId, respondentId: new Types.ObjectId(respondentId) });
+    }
+
+    if (respondentHash && !respondentEmail && !respondentId) {
+      conditions.push({ surveyId: sId, respondentHash });
     }
 
     if (conditions.length === 0) {
@@ -30,6 +36,16 @@ export class ResponseRepository {
     }
 
     return Response.findOne({ $or: conditions }).lean();
+  }
+
+  async findBySurveyAndEmail(
+    surveyId: string | Types.ObjectId,
+    email: string
+  ): Promise<IResponse | null> {
+    return Response.findOne({
+      surveyId: new Types.ObjectId(surveyId),
+      respondentEmail: email.trim().toLowerCase()
+    }).lean();
   }
 
   async findBySurveyId(

@@ -13,7 +13,10 @@ const questionSchema = new Schema<IQuestion>({
       'likert',
       'dropdown',
       'nps',
-      'date'
+      'date',
+      'number',
+      'email',
+      'phone'
     ],
     required: true
   },
@@ -67,6 +70,12 @@ const surveySchema = new Schema<ISurvey>(
       required: true,
       trim: true,
       maxlength: 2000
+    },
+    category: {
+      type: String,
+      enum: ['survey', 'registration', 'feedback', 'inspection', 'application', 'general'],
+      default: 'general',
+      index: true
     },
     creatorId: {
       type: Schema.Types.ObjectId,

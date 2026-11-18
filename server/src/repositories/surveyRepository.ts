@@ -21,12 +21,16 @@ export class SurveyRepository {
   }
 
   async findWithPagination(params: PaginationParams): Promise<PaginatedResult<ISurvey>> {
-    const { page = 1, limit = 10, status, search, creatorId } = params;
+    const { page = 1, limit = 10, status, category, search, creatorId } = params;
 
     const query: FilterQuery<ISurvey> = { isActive: true };
 
     if (status) {
       query.status = status;
+    }
+
+    if (category) {
+      query.category = category;
     }
 
     if (creatorId) {

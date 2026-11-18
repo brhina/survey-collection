@@ -7,7 +7,21 @@ const isV1 = (req: Request): boolean => {
   return req.originalUrl.includes('/api/v1/');
 };
 
-// Submit a new survey response
+// Check if an email is eligible to submit (1-submission-per-email policy)
+export const checkEligibility = asyncHandler(async (req: Request, res: Response) => {
+  const surveyId = String(req.query.surveyId || '');
+  const email = String(req.query.email || (req.user ? req.user.email : ''));
+
+  const result = await responseService.checkEligibility(surveyId, email);
+
+  if (isV1(req)) {
+    ApiResponse.success(res, result, result.message);
+  } else {
+    res.json(result);
+  }
+});
+
+// Submit a new survey / data collector response
 export const submitResponse = asyncHandler(async (req: Request, res: Response) => {
   const clientIp = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '';
   const userAgent = req.headers['user-agent'] || '';

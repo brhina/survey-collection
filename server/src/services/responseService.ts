@@ -78,6 +78,26 @@ export class ResponseService {
             throw new BadRequestError(`Rating for "${question.questionText}" must be between ${min} and ${max}`);
           }
         }
+      } else if (question.type === 'number') {
+        if (val !== undefined && val !== null && val !== '') {
+          const num = Number(val);
+          if (isNaN(num)) {
+            throw new BadRequestError(`"${question.questionText}" requires a valid number`);
+          }
+        }
+      } else if (question.type === 'email') {
+        if (typeof val === 'string' && val.trim() !== '') {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(val.trim())) {
+            throw new BadRequestError(`"${val}" is not a valid email address for "${question.questionText}"`);
+          }
+        }
+      } else if (question.type === 'date') {
+        if (val !== undefined && val !== null && val !== '') {
+          if (isNaN(Date.parse(String(val)))) {
+            throw new BadRequestError(`"${val}" is not a valid date for "${question.questionText}"`);
+          }
+        }
       }
 
       sanitizedAnswers.push({
@@ -126,38 +146,100 @@ export class ResponseService {
       throw new UnauthorizedError('Authentication is required to participate in this survey');
     }
 
+    // 1. Resolve and validate respondent email (Required for 1-user-1-submission uniqueness)
+    const effectiveEmail = (user?.email || input.respondentEmail || '').trim().toLowerCase();
+    if (!effectiveEmail) {
+      throw new BadRequestError('Respondent email is required to record data uniquely.');
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(effectiveEmail)) {
+      throw new BadRequestError('A valid email address is required (e.g. user@example.com).');
+    }
+
     const respondentHash = this.generateHash(clientIp, userAgent);
 
-    // Prevent duplicate submissions if configured
-    if (!survey.settings?.allowMultipleSubmissions) {
-      const existing = await responseRepository.findExistingSubmission({
-        surveyId: survey._id ? survey._id.toString() : input.surveyId,
-        respondentId: user?.id,
-        respondentHash
-      });
+    // 2. Strict Uniqueness Check: One submission per email account is strictly enforced
+    const existingSubmission = await responseRepository.findExistingSubmission({
+      surveyId: survey._id ? survey._id.toString() : input.surveyId,
+      respondentEmail: effectiveEmail,
+      respondentId: user?.id
+    });
 
-      if (existing) {
-        throw new ConflictError('You have already submitted a response to this survey');
-      }
+    if (existingSubmission) {
+      throw new ConflictError(
+        `A submission from "${effectiveEmail}" has already been recorded for this data collector. One email account cannot submit more than once.`
+      );
     }
 
     // Validate answers against questions
     const validatedAnswers = this.validateAnswers(survey.questions, input.answers as IAnswer[]);
 
-    const response = await responseRepository.create({
-      surveyId: survey._id,
-      respondentId: survey.settings?.isAnonymous ? null : (user ? new Types.ObjectId(user.id) : null),
-      respondentHash: survey.settings?.isAnonymous ? null : respondentHash,
-      answers: validatedAnswers,
-      completionTimeSeconds: input.completionTimeSeconds || 0,
-      submittedAt: new Date()
-    });
+    let response: IResponse;
+    try {
+      response = await responseRepository.create({
+        surveyId: survey._id,
+        respondentEmail: effectiveEmail,
+        respondentId: survey.settings?.isAnonymous ? null : (user ? new Types.ObjectId(user.id) : null),
+        respondentHash: survey.settings?.isAnonymous ? null : respondentHash,
+        answers: validatedAnswers,
+        completionTimeSeconds: input.completionTimeSeconds || 0,
+        submittedAt: new Date()
+      });
+    } catch (err: unknown) {
+      const mongoErr = err as { code?: number; name?: string };
+      if (mongoErr && (mongoErr.code === 11000 || mongoErr.name === 'MongoServerError')) {
+        throw new ConflictError(
+          `A submission from "${effectiveEmail}" has already been recorded for this data collector. One email account cannot submit more than once.`
+        );
+      }
+      throw err;
+    }
 
     if (survey._id) {
       await surveyRepository.incrementResponseCount(survey._id);
     }
 
     return response;
+  }
+
+  async checkEligibility(surveyId: string, email: string): Promise<{
+    eligible: boolean;
+    message: string;
+    email: string;
+    surveyId: string;
+  }> {
+    if (!Types.ObjectId.isValid(surveyId)) {
+      throw new NotFoundError('Data collector not found');
+    }
+
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!cleanEmail || !emailRegex.test(cleanEmail)) {
+      throw new BadRequestError('Please provide a valid email address');
+    }
+
+    const survey = await surveyRepository.findById(surveyId);
+    if (!survey || !survey.isActive) {
+      throw new NotFoundError('Data collector not found or inactive');
+    }
+
+    const existing = await responseRepository.findBySurveyAndEmail(surveyId, cleanEmail);
+    if (existing) {
+      return {
+        eligible: false,
+        message: `A submission has already been recorded for "${cleanEmail}". Each user can only fill this once.`,
+        email: cleanEmail,
+        surveyId
+      };
+    }
+
+    return {
+      eligible: true,
+      message: `"${cleanEmail}" is eligible to submit data.`,
+      email: cleanEmail,
+      surveyId
+    };
   }
 
   async getSurveyResults(surveyId: string): Promise<ISurveyResults> {

@@ -2,14 +2,22 @@ import { Router } from 'express';
 import {
   submitResponse,
   getSurveyResults,
-  getAllResponses
+  getAllResponses,
+  checkEligibility
 } from '../../controllers/responseController';
 import { validate } from '../../middlewares/validate';
 import { optionalAuthenticate } from '../../middlewares/auth';
 import { submissionRateLimiter } from '../../middlewares/rateLimiter';
-import { submitResponseSchema } from '../../schemas/responseSchema';
+import { submitResponseSchema, checkEligibilityQuerySchema } from '../../schemas/responseSchema';
 
 const router = Router();
+
+router.get(
+  '/check-eligibility',
+  optionalAuthenticate,
+  validate({ query: checkEligibilityQuerySchema }),
+  checkEligibility
+);
 
 router.post(
   '/',

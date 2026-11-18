@@ -14,9 +14,15 @@ export const answerInputSchema = z.object({
 
 export const submitResponseSchema = z.object({
   surveyId: z.string().min(1, 'Survey ID is required'),
+  respondentEmail: z.string().email('Valid email address is required').trim().toLowerCase().optional(),
   answers: z.array(answerInputSchema).min(1, 'At least one answer must be provided'),
   completionTimeSeconds: z.number().int().nonnegative().optional().default(0),
   accessCode: z.string().optional()
+});
+
+export const checkEligibilityQuerySchema = z.object({
+  surveyId: z.string().min(1, 'Survey / Collector ID is required'),
+  email: z.string().email('Valid email address is required').trim().toLowerCase()
 });
 
 export const responseQuerySchema = z.object({
@@ -25,4 +31,5 @@ export const responseQuerySchema = z.object({
 });
 
 export type SubmitResponseInput = z.infer<typeof submitResponseSchema>;
+export type CheckEligibilityQueryInput = z.infer<typeof checkEligibilityQuerySchema>;
 export type ResponseQueryInput = z.infer<typeof responseQuerySchema>;

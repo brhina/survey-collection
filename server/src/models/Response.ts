@@ -18,7 +18,10 @@ const answerSchema = new Schema<IAnswer>(
         'likert',
         'dropdown',
         'nps',
-        'date'
+        'date',
+        'number',
+        'email',
+        'phone'
       ]
     },
     answer: {
@@ -35,6 +38,13 @@ const responseSchema = new Schema<IResponse>(
       type: Schema.Types.ObjectId,
       ref: 'Survey',
       required: true,
+      index: true
+    },
+    respondentEmail: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
       index: true
     },
     respondentId: {
@@ -65,7 +75,8 @@ const responseSchema = new Schema<IResponse>(
   }
 );
 
-// Compound indexes for lookup and duplicate checking
+// Compound indexes for lookup and strict single-submission email uniqueness
+responseSchema.index({ surveyId: 1, respondentEmail: 1 }, { unique: true });
 responseSchema.index({ surveyId: 1, submittedAt: -1 });
 responseSchema.index({ surveyId: 1, respondentId: 1 });
 responseSchema.index({ surveyId: 1, respondentHash: 1 });
