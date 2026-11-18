@@ -1,3 +1,11 @@
+export type CollectorCategory =
+  | 'survey'
+  | 'registration'
+  | 'feedback'
+  | 'inspection'
+  | 'application'
+  | 'general';
+
 export type QuestionType =
   | 'text'
   | 'long-text'
@@ -7,7 +15,10 @@ export type QuestionType =
   | 'dropdown'
   | 'likert'
   | 'nps'
-  | 'date';
+  | 'date'
+  | 'number'
+  | 'email'
+  | 'phone';
 
 export type SurveyStatus = 'draft' | 'published' | 'closed' | 'archived';
 
@@ -44,6 +55,7 @@ export interface Survey {
   _id: string;
   title: string;
   description: string;
+  category?: CollectorCategory;
   status?: SurveyStatus;
   settings?: SurveySettings;
   questions: Question[];
@@ -56,6 +68,7 @@ export interface Survey {
 export interface CreateSurveyData {
   title: string;
   description: string;
+  category?: CollectorCategory;
   status?: SurveyStatus;
   settings?: SurveySettings;
   questions: Question[];
@@ -86,6 +99,12 @@ export interface SurveyResultsData {
 export interface RawResponseRecord {
   _id: string;
   surveyId: string;
+  respondentEmail?: string;
+  respondentId?: {
+    _id?: string;
+    name?: string;
+    email?: string;
+  } | null;
   submittedAt: string;
   completionTimeSeconds?: number;
   answers: {

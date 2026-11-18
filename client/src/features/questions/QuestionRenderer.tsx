@@ -16,6 +16,10 @@ export interface QuestionRendererProps {
 const REGISTRY: Record<string, React.FC<QuestionRendererProps>> = {
   text: TextQuestion,
   'long-text': TextQuestion,
+  number: TextQuestion,
+  email: TextQuestion,
+  phone: TextQuestion,
+  date: TextQuestion,
   'multiple-choice': MultipleChoiceQuestion,
   checkbox: CheckboxQuestion,
   rating: RatingQuestion,

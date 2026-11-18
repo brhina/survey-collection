@@ -23,9 +23,16 @@ export const SurveyCard: React.FC<SurveyCardProps> = ({
     <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-xs hover:shadow-md hover:border-emerald-300 transition-all duration-200 flex flex-col justify-between">
       <div>
         <div className="flex items-center justify-between gap-2 mb-3">
-          <Badge variant="emerald">
-            {survey.questions?.length || 0} Questions
-          </Badge>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {survey.category && (
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200/60">
+                {survey.category}
+              </span>
+            )}
+            <Badge variant="emerald">
+              {survey.questions?.length || 0} Fields
+            </Badge>
+          </div>
           <span className="text-xs text-slate-400">
             {formatDate(survey.createdAt)}
           </span>
@@ -34,9 +41,15 @@ export const SurveyCard: React.FC<SurveyCardProps> = ({
         <h3 className="text-base sm:text-lg font-bold text-slate-900 line-clamp-1 mb-1.5">
           {survey.title}
         </h3>
-        <p className="text-xs sm:text-sm text-slate-600 line-clamp-2 leading-relaxed mb-5">
+        <p className="text-xs sm:text-sm text-slate-600 line-clamp-2 leading-relaxed mb-4">
           {survey.description}
         </p>
+
+        <div className="mb-4">
+          <span className="text-xs font-semibold text-slate-700">
+            {survey.responseCount || 0} submissions
+          </span>
+        </div>
       </div>
 
       <div className="space-y-3 pt-4 border-t border-slate-100">

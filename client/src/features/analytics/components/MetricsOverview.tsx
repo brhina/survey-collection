@@ -12,8 +12,13 @@ export const MetricsOverview: React.FC<MetricsOverviewProps> = ({ survey, result
   return (
     <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 p-5 sm:p-7 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-5">
       <div className="max-w-xl">
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
           <Badge variant="emerald">Active</Badge>
+          {survey.category && (
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">
+              {survey.category}
+            </span>
+          )}
           <span className="text-xs text-slate-400">
             {formatDate(survey.createdAt)}
           </span>
@@ -28,7 +33,7 @@ export const MetricsOverview: React.FC<MetricsOverviewProps> = ({ survey, result
         )}
       </div>
 
-      <div className="bg-emerald-50/70 border border-emerald-100 rounded-2xl p-4 sm:p-5 text-center sm:min-w-[160px] shrink-0">
+      <div className="bg-emerald-50/70 border border-emerald-100 rounded-2xl p-4 sm:p-5 text-center sm:min-w-[170px] shrink-0">
         <span className="text-xs font-semibold uppercase tracking-wider text-emerald-800">
           Submissions
         </span>

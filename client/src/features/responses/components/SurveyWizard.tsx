@@ -81,7 +81,7 @@ export const SurveyWizard: React.FC<SurveyWizardProps> = ({
               onClick={onSubmit}
               leftIcon={<CheckCircle2 className="w-4 h-4 stroke-[2.2]" />}
             >
-              Submit Survey
+              Submit Response
             </Button>
           ) : (
             <Button

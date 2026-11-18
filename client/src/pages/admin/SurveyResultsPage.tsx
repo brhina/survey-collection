@@ -98,7 +98,7 @@ export const SurveyResultsPage: React.FC = () => {
               Dashboard
             </Button>
           </Link>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Survey Results</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Collector Results & Data</h1>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">

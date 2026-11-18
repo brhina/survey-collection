@@ -8,6 +8,8 @@ export const API_ENDPOINTS = {
   },
   RESPONSES: {
     BASE: '/v1/responses',
+    CHECK_ELIGIBILITY: (surveyId: string, email: string) =>
+      `/v1/responses/check-eligibility?surveyId=${encodeURIComponent(surveyId)}&email=${encodeURIComponent(email)}`,
     BY_SURVEY: (surveyId: string) => `/v1/responses/survey/${surveyId}`,
     RESULTS: (surveyId: string) => `/v1/responses/survey/${surveyId}/results`,
     LEGACY_BASE: '/responses',

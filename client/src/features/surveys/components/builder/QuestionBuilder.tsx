@@ -50,6 +50,10 @@ export const QuestionBuilder: React.FC<QuestionBuilderProps> = ({
             <option value="text">Short Answer</option>
             <option value="long-text">Paragraph</option>
             <option value="dropdown">Dropdown</option>
+            <option value="number">Number / Metric</option>
+            <option value="email">Email Address</option>
+            <option value="phone">Phone / Contact</option>
+            <option value="date">Date Picker</option>
           </select>
         </div>
 

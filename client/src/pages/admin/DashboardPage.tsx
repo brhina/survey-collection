@@ -9,11 +9,21 @@ import ConfirmDialog from '../../components/feedback/ConfirmDialog';
 import SurveyFilters from '../../features/surveys/components/SurveyFilters';
 import SurveyList from '../../features/surveys/components/SurveyList';
 
+const CATEGORY_TABS: { id: string; label: string }[] = [
+  { id: 'all', label: 'All Collectors' },
+  { id: 'survey', label: 'Surveys & Polls' },
+  { id: 'registration', label: 'Registrations' },
+  { id: 'feedback', label: 'Feedback' },
+  { id: 'inspection', label: 'Audits' },
+  { id: 'application', label: 'Applications' }
+];
+
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const [surveys, setSurveys] = useState<Survey[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [search, setSearch] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
@@ -29,7 +39,7 @@ export const DashboardPage: React.FC = () => {
       const data = await surveyApi.getAll();
       setSurveys(data.filter((s) => s.isActive !== false));
     } catch (error) {
-      console.error('Error fetching surveys:', error);
+      console.error('Error fetching data collectors:', error);
     } finally {
       setLoading(false);
     }
@@ -39,7 +49,7 @@ export const DashboardPage: React.FC = () => {
     const url = `${window.location.origin}/survey/${id}`;
     navigator.clipboard.writeText(url);
     setCopiedId(id);
-    toast.success('Survey link copied');
+    toast.success('Collector link copied');
     setTimeout(() => setCopiedId(null), 2500);
   };
 
@@ -52,21 +62,27 @@ export const DashboardPage: React.FC = () => {
     if (!surveyToDelete) return;
     try {
       await surveyApi.delete(surveyToDelete._id);
-      toast.success('Survey deleted');
+      toast.success('Data collector deleted');
       setSurveys((prev) => prev.filter((s) => s._id !== surveyToDelete._id));
     } catch (err) {
-      console.error('Failed to delete survey:', err);
+      console.error('Failed to delete collector:', err);
     } finally {
       setDeleteModalOpen(false);
       setSurveyToDelete(null);
     }
   };
 
-  const filteredSurveys = surveys.filter(
-    (s) =>
+  const filteredSurveys = surveys.filter((s) => {
+    const matchesSearch =
       s.title.toLowerCase().includes(search.toLowerCase()) ||
-      s.description.toLowerCase().includes(search.toLowerCase())
-  );
+      s.description.toLowerCase().includes(search.toLowerCase());
+
+    const matchesCategory =
+      selectedCategory === 'all' ||
+      (s.category ? s.category === selectedCategory : selectedCategory === 'survey' || selectedCategory === 'general');
+
+    return matchesSearch && matchesCategory;
+  });
 
   const totalQuestions = surveys.reduce((acc, s) => acc + (s.questions?.length || 0), 0);
   const totalResponses = surveys.reduce((acc, s) => acc + (s.responseCount || 0), 0);
@@ -76,9 +92,11 @@ export const DashboardPage: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 sm:pb-6 border-b border-slate-200/80">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Dashboard</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Data Collector Dashboard
+          </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Manage surveys and track responses
+            Manage data forms, surveys, registrations, and track unique verified submissions
           </p>
         </div>
         <Link to="/admin/create" className="w-full sm:w-auto">
@@ -88,7 +106,7 @@ export const DashboardPage: React.FC = () => {
             className="w-full sm:w-auto"
             leftIcon={<Plus className="w-4 h-4 stroke-[2.5]" />}
           >
-            Create Survey
+            Create Data Collector
           </Button>
         </Link>
       </div>
@@ -100,7 +118,7 @@ export const DashboardPage: React.FC = () => {
             <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Surveys</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Collectors</p>
             <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-0.5">{surveys.length}</h3>
           </div>
         </div>
@@ -110,7 +128,7 @@ export const DashboardPage: React.FC = () => {
             <Users className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Responses</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Submissions</p>
             <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-0.5">{totalResponses}</h3>
           </div>
         </div>
@@ -120,33 +138,55 @@ export const DashboardPage: React.FC = () => {
             <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Questions</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Fields</p>
             <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-0.5">{totalQuestions}</h3>
           </div>
         </div>
       </div>
 
-      {/* Search / Filter Row */}
-      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 pt-1">
-        <SurveyFilters search={search} onSearchChange={setSearch} />
-      </div>
+      {/* Category Tabs & Search Bar */}
+      <div className="space-y-4 pt-1">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+            {CATEGORY_TABS.map((tab) => {
+              const isActive = selectedCategory === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(tab.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                    isActive
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'bg-white border border-slate-200/80 text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
 
-      {/* Survey List Grid */}
-      <SurveyList
-        surveys={filteredSurveys}
-        loading={loading}
-        search={search}
-        copiedId={copiedId}
-        onCopyLink={handleCopyLink}
-        onDelete={openDeleteConfirm}
-        onCreateNew={() => navigate('/admin/create')}
-      />
+          <SurveyFilters search={search} onSearchChange={setSearch} />
+        </div>
+
+        {/* Survey List Grid */}
+        <SurveyList
+          surveys={filteredSurveys}
+          loading={loading}
+          search={search}
+          copiedId={copiedId}
+          onCopyLink={handleCopyLink}
+          onDelete={openDeleteConfirm}
+          onCreateNew={() => navigate('/admin/create')}
+        />
+      </div>
 
       {/* Delete Confirmation Modal */}
       <ConfirmDialog
         isOpen={deleteModalOpen}
-        title="Delete Survey"
-        message={`Are you sure you want to delete "${surveyToDelete?.title}"? This survey will no longer accept responses.`}
+        title="Delete Data Collector"
+        message={`Are you sure you want to delete "${surveyToDelete?.title}"? All submitted response data will be permanently removed.`}
         confirmText="Delete"
         cancelText="Cancel"
         isDangerous={true}

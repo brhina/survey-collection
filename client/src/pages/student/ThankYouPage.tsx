@@ -12,10 +12,10 @@ export const ThankYouPage: React.FC = () => {
         </div>
 
         <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
-          Thank You
+          Thank You!
         </h1>
         <p className="text-sm text-slate-600 leading-relaxed mb-6">
-          Your response has been recorded.
+          Your submission has been securely recorded and synced to your email account.
         </p>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5">
@@ -26,7 +26,7 @@ export const ThankYouPage: React.FC = () => {
               className="w-full sm:w-auto"
               leftIcon={<Home className="w-4 h-4" />}
             >
-              Surveys
+              Explore Collectors
             </Button>
           </Link>
           <Link to="/admin" className="w-full sm:w-auto">

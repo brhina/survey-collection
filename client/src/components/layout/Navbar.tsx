@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  Compass,
   CheckCircle2,
   MoreVertical,
   LogIn,
@@ -66,9 +65,12 @@ export const Navbar: React.FC = () => {
             <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-sm shadow-emerald-600/30 group-hover:scale-105 transition-transform">
               <CheckCircle2 className="w-5 h-5 stroke-[2.5]" />
             </div>
-            <div className="flex items-center">
-              <span className="text-lg font-bold tracking-tight text-slate-900 group-hover:text-emerald-700 transition-colors">
-                SurveyFlow
+            <div className="flex flex-col">
+              <span className="text-lg font-bold tracking-tight text-slate-900 group-hover:text-emerald-700 transition-colors leading-tight">
+                DataCollector
+              </span>
+              <span className="text-[10px] font-medium text-slate-400 tracking-tight leading-none">
+                Universal Data & Surveys
               </span>
             </div>
           </Link>
@@ -83,8 +85,7 @@ export const Navbar: React.FC = () => {
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
-              <Compass className="w-4 h-4 text-emerald-600" />
-              <span>Surveys</span>
+              <span>Collectors</span>
             </Link>
 
             {/* Overflow MoreVertical Menu */}
@@ -157,7 +158,7 @@ export const Navbar: React.FC = () => {
                             }`}
                           >
                             <PlusCircle className="w-4 h-4 text-emerald-600" />
-                            <span>Create Survey</span>
+                            <span>New Data Collector</span>
                           </Link>
                         </div>
                       )}

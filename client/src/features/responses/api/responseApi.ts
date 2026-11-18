@@ -4,9 +4,17 @@ import { RawResponseRecord, SurveyResultsData } from '../../../types';
 
 export interface SubmitResponsePayload {
   surveyId: string;
+  respondentEmail?: string;
   answers: { questionId: string; answer: unknown; questionType?: string }[];
   completionTimeSeconds?: number;
   accessCode?: string;
+}
+
+export interface EligibilityResult {
+  eligible: boolean;
+  message: string;
+  email: string;
+  surveyId?: string;
 }
 
 export interface PaginatedResponsesResult {
@@ -21,7 +29,19 @@ export interface PaginatedResponsesResult {
 
 export const responseApi = {
   /**
-   * Submit respondent answers for a survey.
+   * Check if a respondent email has already submitted for this data collector.
+   */
+  async checkEligibility(surveyId: string, email: string): Promise<EligibilityResult> {
+    const res = await apiClient.get<unknown>(API_ENDPOINTS.RESPONSES.CHECK_ELIGIBILITY(surveyId, email));
+    const resData = res.data;
+    if (resData && typeof resData === 'object' && 'data' in resData) {
+      return (resData as { data: EligibilityResult }).data;
+    }
+    return resData as EligibilityResult;
+  },
+
+  /**
+   * Submit respondent answers for a survey / data collector.
    */
   async submit(data: SubmitResponsePayload): Promise<unknown> {
     const res = await apiClient.post<unknown>(API_ENDPOINTS.RESPONSES.BASE, data);
