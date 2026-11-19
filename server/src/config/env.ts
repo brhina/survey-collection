@@ -9,7 +9,14 @@ const envSchema = z.object({
   MONGO_URI: z.string().default('mongodb://localhost:27017/survey_app'),
   JWT_SECRET: z.string().default('survey_platform_secret_jwt_key_change_in_production'),
   JWT_EXPIRES_IN: z.string().default('7d'),
-  CORS_ORIGIN: z.string().default('*')
+  CORS_ORIGIN: z.string().default('*'),
+  AI_PROVIDER: z.enum(['gemini', 'openai', 'heuristic', 'auto']).default('auto'),
+  GEMINI_API_KEY: z.string().optional().default(''),
+  GEMINI_MODEL: z.string().default('gemini-3.1-flash-lite'),
+  OPENAI_API_KEY: z.string().optional().default(''),
+  OPENAI_MODEL: z.string().default('gpt-4o'),
+  AI_TEMPERATURE: z.coerce.number().default(0.15),
+  AI_CACHE_TTL_HOURS: z.coerce.number().default(24)
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
