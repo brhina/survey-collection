@@ -16,6 +16,13 @@ export const API_ENDPOINTS = {
     LEGACY_BY_SURVEY: (surveyId: string) => `/responses/survey/${surveyId}`,
     LEGACY_RESULTS: (surveyId: string) => `/responses/survey/${surveyId}/results`
   },
+  AI: {
+    ANALYZE: (surveyId: string) => `/v1/surveys/${surveyId}/ai/analyze`,
+    STREAM: (surveyId: string) => `/v1/surveys/${surveyId}/ai/stream`,
+    LATEST: (surveyId: string) => `/v1/surveys/${surveyId}/ai/latest`,
+    OVERRIDE: (surveyId: string) => `/v1/surveys/${surveyId}/ai/decision/override`,
+    CHAT: (surveyId: string) => `/v1/surveys/${surveyId}/ai/chat`
+  },
   AUTH: {
     REGISTER: '/v1/auth/register',
     LOGIN: '/v1/auth/login',

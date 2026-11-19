@@ -77,17 +77,7 @@ export const Navbar: React.FC = () => {
 
           {/* Right Navigation & MoreVertical Dropdown */}
           <div className="flex items-center gap-3">
-            <Link
-              to="/"
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
-                location.pathname === '/'
-                  ? 'bg-emerald-50 text-emerald-800'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
-              <span>Collectors</span>
-            </Link>
-
+            
             {/* Overflow MoreVertical Menu */}
             <div className="relative" ref={menuRef}>
               <button

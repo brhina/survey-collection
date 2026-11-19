@@ -13,6 +13,7 @@ import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
 import DashboardPage from './pages/admin/DashboardPage';
 import CreateSurveyPage from './pages/admin/CreateSurveyPage';
+import EditSurveyPage from './pages/admin/EditSurveyPage';
 import SurveyResultsPage from './pages/admin/SurveyResultsPage';
 import AdminLoginPage from './pages/admin/AdminLoginPage';
 import TakeSurveyPage from './pages/student/TakeSurveyPage';
@@ -83,6 +84,26 @@ function App() {
                 <AdminRoute>
                   <AdminLayout>
                     <CreateSurveyPage />
+                  </AdminLayout>
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/edit/:id"
+              element={
+                <AdminRoute>
+                  <AdminLayout>
+                    <EditSurveyPage />
+                  </AdminLayout>
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/surveys/:id/edit"
+              element={
+                <AdminRoute>
+                  <AdminLayout>
+                    <EditSurveyPage />
                   </AdminLayout>
                 </AdminRoute>
               }

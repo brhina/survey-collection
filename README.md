@@ -116,3 +116,9 @@ Open `http://localhost:5173` in your browser.
 - `POST /api/v1/auth/register` - Create user account
 - `POST /api/v1/auth/login` - Authenticate and retrieve JWT token
 - `GET /api/v1/auth/me` - Retrieve current user profile
+
+---
+
+## 🧠 AI Intelligence & Decision Engine Plan
+For the complete technical blueprint, multi-dimensional semantic summarization, domain decision matrix, Server-Sent Events (SSE) streaming, and client/server architecture, see:
+👉 **[AI_INTEGRATION_PLAN.md](file:///home/brie/Projects/survey-collection/AI_INTEGRATION_PLAN.md)**
