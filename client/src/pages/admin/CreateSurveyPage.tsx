@@ -2,14 +2,15 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
-  ArrowLeft,
   CheckCircle2,
-  Eye
+  Eye,
+  Save
 } from 'lucide-react';
 import { surveyApi } from '../../features/surveys/api/surveyApi';
 import { CreateSurveyData, Question, QuestionType, CollectorCategory } from '../../types';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
+import Breadcrumb from '../../components/ui/Breadcrumb';
 import QuestionBuilder from '../../features/surveys/components/builder/QuestionBuilder';
 import SurveyLivePreview from '../../features/surveys/components/builder/SurveyLivePreview';
 
@@ -258,9 +259,7 @@ export const CreateSurveyPage: React.FC = () => {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleCreate = async (targetStatus: 'published' | 'draft' = 'published') => {
     if (!survey.title.trim()) {
       toast.error('Please enter a title for this data collector');
       return;
@@ -287,8 +286,12 @@ export const CreateSurveyPage: React.FC = () => {
 
     try {
       setSubmitting(true);
-      await surveyApi.create(survey);
-      toast.success('Data collector published successfully');
+      await surveyApi.create({ ...survey, status: targetStatus });
+      toast.success(
+        targetStatus === 'draft'
+          ? 'Data collector saved as draft'
+          : 'Data collector published successfully'
+      );
       navigate('/admin');
     } catch (error) {
       console.error('Failed to create collector:', error);
@@ -297,20 +300,19 @@ export const CreateSurveyPage: React.FC = () => {
     }
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleCreate('published');
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6 py-2">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200/80">
-        <div className="flex items-center gap-3">
-          <Link to="/admin">
-            <Button variant="ghost" size="sm" leftIcon={<ArrowLeft className="w-4 h-4" />}>
-              Back
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Create Data Collector</h1>
-            <p className="text-xs text-slate-500">Configure fields, category, and single-submission unique email sync</p>
-          </div>
+        <div>
+          <Breadcrumb items={[{ label: 'Create Data Collector' }]} />
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Create Data Collector</h1>
+          <p className="text-xs text-slate-500">Configure fields, category, and single-submission unique email sync</p>
         </div>
 
         <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl self-start sm:self-auto">
@@ -452,16 +454,30 @@ export const CreateSurveyPage: React.FC = () => {
               </Button>
             </Link>
 
-            <Button
-              type="submit"
-              variant="primary"
-              size="md"
-              isLoading={submitting}
-              className="w-full sm:w-auto"
-              leftIcon={<CheckCircle2 className="w-4 h-4 stroke-[2.2]" />}
-            >
-              Publish Data Collector
-            </Button>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Button
+                type="button"
+                variant="secondary"
+                size="md"
+                isLoading={submitting}
+                onClick={() => handleCreate('draft')}
+                className="w-full sm:w-auto"
+                leftIcon={<Save className="w-4 h-4 text-amber-600" />}
+              >
+                Save as Draft
+              </Button>
+
+              <Button
+                type="submit"
+                variant="primary"
+                size="md"
+                isLoading={submitting}
+                className="w-full sm:w-auto"
+                leftIcon={<CheckCircle2 className="w-4 h-4 stroke-[2.2]" />}
+              >
+                Publish Data Collector
+              </Button>
+            </div>
           </div>
         </form>
       ) : (

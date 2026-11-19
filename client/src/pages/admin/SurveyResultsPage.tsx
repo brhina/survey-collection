@@ -2,28 +2,31 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
-  ArrowLeft,
   Copy,
   FileSpreadsheet,
   FileJson,
   BarChart2,
-  ListOrdered
+  ListOrdered,
+  Sparkles,
+  Edit3
 } from 'lucide-react';
 import { surveyApi } from '../../features/surveys/api/surveyApi';
 import { responseApi } from '../../features/responses/api/responseApi';
-import { Survey, SurveyResultsData, RawResponseRecord } from '../../types';
+import { Survey, SurveyResultsData, RawResponseRecord, SurveyStatus } from '../../types';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
+import Breadcrumb from '../../components/ui/Breadcrumb';
 import MetricsOverview from '../../features/analytics/components/MetricsOverview';
 import QuestionChart from '../../features/analytics/components/QuestionChart';
 import ResponseTable from '../../features/analytics/components/ResponseTable';
+import AiIntelligenceTab from '../../features/ai-intelligence/components/AiIntelligenceTab';
 
 export const SurveyResultsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [survey, setSurvey] = useState<Survey | null>(null);
   const [results, setResults] = useState<SurveyResultsData | null>(null);
   const [rawResponses, setRawResponses] = useState<RawResponseRecord[]>([]);
-  const [activeTab, setActiveTab] = useState<'analytics' | 'responses'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'responses' | 'ai'>('ai');
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -68,6 +71,18 @@ export const SurveyResultsPage: React.FC = () => {
     }
   };
 
+  const handleStatusChange = async (newStatus: SurveyStatus) => {
+    if (!survey || !id) return;
+    try {
+      setSurvey({ ...survey, status: newStatus });
+      await surveyApi.updateStatus(id, newStatus);
+      toast.success(`Collector status updated to "${newStatus}"`);
+    } catch (err) {
+      console.error('Failed to change status:', err);
+      toast.error('Failed to update status');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-[50vh] flex flex-col items-center justify-center">
@@ -92,16 +107,41 @@ export const SurveyResultsPage: React.FC = () => {
     <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8 py-2">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/80">
-        <div className="flex items-center gap-3">
-          <Link to="/admin">
-            <Button variant="ghost" size="sm" leftIcon={<ArrowLeft className="w-4 h-4" />}>
-              Dashboard
-            </Button>
-          </Link>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Collector Results & Data</h1>
+        <div>
+          <Breadcrumb
+            items={[
+              { label: survey.title || 'Collector', href: `/admin/results/${survey._id}` },
+              { label: 'Results & Analytics' }
+            ]}
+          />
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Collector Results & Data</h1>
+            <select
+              value={survey.status || 'published'}
+              onChange={(e) => handleStatusChange(e.target.value as SurveyStatus)}
+              className="text-xs font-bold px-2 py-0.5 rounded-lg border uppercase tracking-wider cursor-pointer bg-white border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              title="Change Collector Status"
+            >
+              <option value="published">● Published</option>
+              <option value="draft">● Draft</option>
+              <option value="closed">● Closed</option>
+              <option value="archived">● Archived</option>
+            </select>
+          </div>
+          <p className="text-xs text-slate-500 mt-0.5">{survey.title}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <Link to={`/admin/edit/${survey._id}`}>
+            <Button
+              variant="secondary"
+              size="sm"
+              leftIcon={<Edit3 className="w-3.5 h-3.5 text-blue-600" />}
+            >
+              Edit Collector
+            </Button>
+          </Link>
+
           <Button
             variant="outline"
             size="sm"
@@ -135,7 +175,19 @@ export const SurveyResultsPage: React.FC = () => {
       <MetricsOverview survey={survey} results={results} />
 
       {/* Tab Switcher */}
-      <div className="flex gap-2 border-b border-slate-200/80 pb-2">
+      <div className="flex gap-2 border-b border-slate-200/80 pb-2 flex-wrap">
+        <button
+          onClick={() => setActiveTab('ai')}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+            activeTab === 'ai'
+              ? 'bg-emerald-600 text-white shadow-xs'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          }`}
+        >
+          <Sparkles className="w-4 h-4 text-amber-300" />
+          <span>AI Decisions & Intelligence</span>
+        </button>
+
         <button
           onClick={() => setActiveTab('analytics')}
           className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
@@ -162,7 +214,13 @@ export const SurveyResultsPage: React.FC = () => {
       </div>
 
       {/* Tab Content */}
-      {activeTab === 'analytics' ? (
+      {activeTab === 'ai' ? (
+        <AiIntelligenceTab
+          survey={survey}
+          results={results}
+          rawResponses={rawResponses}
+        />
+      ) : activeTab === 'analytics' ? (
         <div className="space-y-4 sm:space-y-6">
           {survey.questions.map((question, qIdx) => {
             const analysis = results.results[qIdx];

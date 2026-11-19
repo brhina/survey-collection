@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Plus, FileText, Users, CheckCircle } from 'lucide-react';
+import { Plus, FileText, Users, CheckCircle, ChevronDown } from 'lucide-react';
 import { surveyApi } from '../../features/surveys/api/surveyApi';
-import { Survey } from '../../types';
+import { Survey, SurveyStatus } from '../../types';
 import Button from '../../components/ui/Button';
 import ConfirmDialog from '../../components/feedback/ConfirmDialog';
 import SurveyFilters from '../../features/surveys/components/SurveyFilters';
 import SurveyList from '../../features/surveys/components/SurveyList';
 
 const CATEGORY_TABS: { id: string; label: string }[] = [
-  { id: 'all', label: 'All Collectors' },
+  { id: 'all', label: 'All Categories' },
   { id: 'survey', label: 'Surveys & Polls' },
   { id: 'registration', label: 'Registrations' },
   { id: 'feedback', label: 'Feedback' },
@@ -24,6 +24,7 @@ export const DashboardPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [search, setSearch] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
@@ -72,6 +73,21 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
+  const handleStatusChange = async (surveyId: string, newStatus: SurveyStatus) => {
+    try {
+      // Optimistic update
+      setSurveys((prev) =>
+        prev.map((s) => (s._id === surveyId ? { ...s, status: newStatus } : s))
+      );
+      await surveyApi.updateStatus(surveyId, newStatus);
+      toast.success(`Survey status updated to "${newStatus}"`);
+    } catch (err) {
+      console.error('Failed to change survey status:', err);
+      toast.error('Failed to update status');
+      fetchSurveys();
+    }
+  };
+
   const filteredSurveys = surveys.filter((s) => {
     const matchesSearch =
       s.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -81,11 +97,23 @@ export const DashboardPage: React.FC = () => {
       selectedCategory === 'all' ||
       (s.category ? s.category === selectedCategory : selectedCategory === 'survey' || selectedCategory === 'general');
 
-    return matchesSearch && matchesCategory;
+    const itemStatus = s.status || 'published';
+    const matchesStatus = selectedStatus === 'all' || itemStatus === selectedStatus;
+
+    return matchesSearch && matchesCategory && matchesStatus;
   });
 
   const totalQuestions = surveys.reduce((acc, s) => acc + (s.questions?.length || 0), 0);
   const totalResponses = surveys.reduce((acc, s) => acc + (s.responseCount || 0), 0);
+
+  const statusCounts = surveys.reduce(
+    (acc, s) => {
+      const st = s.status || 'published';
+      acc[st] = (acc[st] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 
   return (
     <div className="space-y-6 sm:space-y-8 py-2">
@@ -119,7 +147,12 @@ export const DashboardPage: React.FC = () => {
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Collectors</p>
-            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-0.5">{surveys.length}</h3>
+            <div className="flex items-baseline gap-2 mt-0.5">
+              <h3 className="text-xl sm:text-2xl font-bold text-slate-900">{surveys.length}</h3>
+              <span className="text-xs text-slate-500 font-medium">
+                ({statusCounts.published || 0} active, {statusCounts.draft || 0} drafts)
+              </span>
+            </div>
           </div>
         </div>
 
@@ -144,10 +177,11 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Category Tabs & Search Bar */}
-      <div className="space-y-4 pt-1">
+      {/* Filters: Category Tabs + (Status Select & Search) */}
+      <div className="space-y-3 pt-1">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+          {/* Category Tabs */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
             {CATEGORY_TABS.map((tab) => {
               const isActive = selectedCategory === tab.id;
               return (
@@ -167,7 +201,29 @@ export const DashboardPage: React.FC = () => {
             })}
           </div>
 
-          <SurveyFilters search={search} onSearchChange={setSearch} />
+          {/* Right Controls: Status Select Input Box + Search Bar */}
+          <div className="flex items-center gap-2.5 w-full sm:w-auto">
+            {/* Status Filter Select Input Box */}
+            <div className="relative w-full sm:w-44 shrink-0">
+              <select
+                id="status-filter-select"
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className="w-full pl-3 pr-8 py-2 bg-white rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-2xs cursor-pointer appearance-none"
+                aria-label="Filter by Status"
+              >
+                <option value="all">All Statuses ({surveys.length})</option>
+                <option value="published">● Published ({statusCounts.published || 0})</option>
+                <option value="draft">● Drafts ({statusCounts.draft || 0})</option>
+                <option value="closed">● Closed ({statusCounts.closed || 0})</option>
+                <option value="archived">● Archived ({statusCounts.archived || 0})</option>
+              </select>
+              <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+
+            {/* Search Input */}
+            <SurveyFilters search={search} onSearchChange={setSearch} />
+          </div>
         </div>
 
         {/* Survey List Grid */}
@@ -178,6 +234,7 @@ export const DashboardPage: React.FC = () => {
           copiedId={copiedId}
           onCopyLink={handleCopyLink}
           onDelete={openDeleteConfirm}
+          onStatusChange={handleStatusChange}
           onCreateNew={() => navigate('/admin/create')}
         />
       </div>

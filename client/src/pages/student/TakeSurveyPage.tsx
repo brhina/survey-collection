@@ -240,7 +240,58 @@ export const TakeSurveyPage: React.FC = () => {
       <div className="min-h-[50vh] flex flex-col items-center justify-center text-center px-4">
         <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">Collector Not Found</h2>
         <p className="text-xs sm:text-sm text-slate-500 mb-6 max-w-sm">
-          This data collector does not exist or has been closed.
+          This data collector does not exist or has been removed.
+        </p>
+        <Button variant="primary" onClick={() => navigate('/')}>
+          Return Home
+        </Button>
+      </div>
+    );
+  }
+
+  if (survey.status === 'draft' && user?.role !== 'admin') {
+    return (
+      <div className="min-h-[50vh] flex flex-col items-center justify-center text-center px-4 space-y-3">
+        <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mx-auto">
+          <AlertCircle className="w-6 h-6 stroke-[2.2]" />
+        </div>
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Collector in Draft Mode</h2>
+        <p className="text-xs sm:text-sm text-slate-500 max-w-sm">
+          This data collector is currently unpublished and not accepting submissions. Please check back later.
+        </p>
+        <Button variant="primary" onClick={() => navigate('/')}>
+          Return Home
+        </Button>
+      </div>
+    );
+  }
+
+  if (survey.status === 'closed') {
+    return (
+      <div className="min-h-[50vh] flex flex-col items-center justify-center text-center px-4 space-y-3">
+        <div className="w-12 h-12 rounded-2xl bg-slate-100 border border-slate-200 text-slate-600 flex items-center justify-center mx-auto">
+          <AlertCircle className="w-6 h-6 stroke-[2.2]" />
+        </div>
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Collector is Closed</h2>
+        <p className="text-xs sm:text-sm text-slate-500 max-w-sm">
+          This data collector has been closed by the organizer and is no longer accepting new submissions.
+        </p>
+        <Button variant="primary" onClick={() => navigate('/')}>
+          Return Home
+        </Button>
+      </div>
+    );
+  }
+
+  if (survey.status === 'archived') {
+    return (
+      <div className="min-h-[50vh] flex flex-col items-center justify-center text-center px-4 space-y-3">
+        <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center mx-auto">
+          <AlertCircle className="w-6 h-6 stroke-[2.2]" />
+        </div>
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Collector is Archived</h2>
+        <p className="text-xs sm:text-sm text-slate-500 max-w-sm">
+          This data collector is archived and no longer accepting submissions.
         </p>
         <Button variant="primary" onClick={() => navigate('/')}>
           Return Home
@@ -254,6 +305,18 @@ export const TakeSurveyPage: React.FC = () => {
 
   return (
     <div className="max-w-2xl mx-auto py-2 sm:py-4 space-y-5 sm:space-y-6">
+      {survey.status === 'draft' && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 flex items-center justify-between text-xs text-amber-900">
+          <div className="flex items-center gap-2">
+            <span className="font-bold">⚠️ Draft Mode (Admin Preview)</span>
+            <span>Respondents cannot view or submit this collector until published.</span>
+          </div>
+          <Link to={`/admin/edit/${survey._id}`} className="text-amber-800 underline font-semibold shrink-0">
+            Edit & Publish
+          </Link>
+        </div>
+      )}
+
       {/* Top Toolbar */}
       <div className="flex items-center justify-between gap-2 text-xs">
         <div className="flex items-center gap-2">

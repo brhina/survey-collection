@@ -34,7 +34,12 @@ export const HomePage: React.FC = () => {
     try {
       setLoading(true);
       const data = await surveyApi.getAll();
-      setSurveys(data.filter((s) => s.isActive !== false));
+      // Public visitors should only see active, non-draft collectors
+      setSurveys(
+        data.filter(
+          (s) => s.isActive !== false && s.status !== 'draft' && s.status !== 'archived'
+        )
+      );
     } catch (err) {
       console.error('Failed to load data collectors:', err);
     } finally {
@@ -139,6 +144,9 @@ export const HomePage: React.FC = () => {
                       <Badge variant="emerald">
                         {survey.questions?.length || 0} Fields
                       </Badge>
+                      {survey.status === 'closed' && (
+                        <Badge variant="slate">Closed</Badge>
+                      )}
                     </div>
                     <span className="text-xs text-slate-400">
                       {formatDate(survey.createdAt)}
@@ -158,17 +166,23 @@ export const HomePage: React.FC = () => {
                     {survey.responseCount ?? 0} submissions
                   </span>
 
-                  <Link to={`/survey/${survey._id}`}>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      rightIcon={
-                        <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-                      }
-                    >
-                      Fill Form
-                    </Button>
-                  </Link>
+                  {survey.status === 'closed' ? (
+                    <span className="text-xs font-semibold text-slate-400 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
+                      Closed
+                    </span>
+                  ) : (
+                    <Link to={`/survey/${survey._id}`}>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        rightIcon={
+                          <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+                        }
+                      >
+                        Fill Form
+                      </Button>
+                    </Link>
+                  )}
                 </div>
               </div>
             ))}
