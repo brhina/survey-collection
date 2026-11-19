@@ -1,5 +1,5 @@
 import React from 'react';
-import { Survey } from '../../../types';
+import { Survey, SurveyStatus } from '../../../types';
 import SurveyCard from './SurveyCard';
 import Skeleton from '../../../components/ui/Skeleton';
 import EmptyState from '../../../components/feedback/EmptyState';
@@ -11,6 +11,7 @@ export interface SurveyListProps {
   copiedId: string | null;
   onCopyLink: (id: string) => void;
   onDelete: (survey: Survey) => void;
+  onStatusChange?: (id: string, newStatus: SurveyStatus) => void;
   onCreateNew?: () => void;
 }
 
@@ -21,6 +22,7 @@ export const SurveyList: React.FC<SurveyListProps> = ({
   copiedId,
   onCopyLink,
   onDelete,
+  onStatusChange,
   onCreateNew
 }) => {
   if (loading) {
@@ -68,6 +70,7 @@ export const SurveyList: React.FC<SurveyListProps> = ({
           survey={survey}
           onCopyLink={onCopyLink}
           onDelete={onDelete}
+          onStatusChange={onStatusChange}
           isCopied={copiedId === survey._id}
         />
       ))}

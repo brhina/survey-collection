@@ -6,6 +6,7 @@ export interface SurveyQueryParams {
   page?: number;
   limit?: number;
   status?: 'draft' | 'published' | 'closed' | 'archived';
+  category?: string;
   search?: string;
   all?: boolean;
 }
@@ -76,6 +77,18 @@ export const surveyApi = {
    */
   async update(id: string, data: Partial<CreateSurveyData>): Promise<Survey> {
     const res = await apiClient.put<unknown>(API_ENDPOINTS.SURVEYS.BY_ID(id), data);
+    const resData = res.data;
+    if (resData && typeof resData === 'object' && 'data' in resData) {
+      return (resData as { data: Survey }).data;
+    }
+    return resData as Survey;
+  },
+
+  /**
+   * Fast status update for a survey (e.g. publish, close, draft, archive).
+   */
+  async updateStatus(id: string, status: 'draft' | 'published' | 'closed' | 'archived'): Promise<Survey> {
+    const res = await apiClient.patch<unknown>(`${API_ENDPOINTS.SURVEYS.BY_ID(id)}/status`, { status });
     const resData = res.data;
     if (resData && typeof resData === 'object' && 'data' in resData) {
       return (resData as { data: Survey }).data;
