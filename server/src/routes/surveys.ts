@@ -15,6 +15,7 @@ router.post('/', validate({ body: createSurveySchema }), createSurvey);
 router.get('/', getAllSurveys);
 router.get('/:id', getSurveyById);
 router.put('/:id', validate({ body: updateSurveySchema }), updateSurvey);
+router.patch('/:id', validate({ body: updateSurveySchema }), updateSurvey);
 router.delete('/:id', deleteSurvey);
 
 export default router;

@@ -16,8 +16,8 @@ export class SurveyRepository {
     return Survey.findById(id).lean();
   }
 
-  async findAllActive(): Promise<ISurvey[]> {
-    return Survey.find({ isActive: true }).sort({ createdAt: -1 }).lean();
+  async findAllActive(filter?: FilterQuery<ISurvey>): Promise<ISurvey[]> {
+    return Survey.find({ isActive: true, ...(filter || {}) }).sort({ createdAt: -1 }).lean();
   }
 
   async findWithPagination(params: PaginationParams): Promise<PaginatedResult<ISurvey>> {
