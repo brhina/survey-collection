@@ -7,15 +7,21 @@ import {
   deleteSurvey,
   exportSurvey
 } from '../../controllers/surveyController';
+import aiRoutes from './aiRoutes';
 import { validate } from '../../middlewares/validate';
 import { authenticate, optionalAuthenticate } from '../../middlewares/auth';
 import {
   createSurveySchema,
   surveyQuerySchema,
-  updateSurveySchema
+  updateSurveySchema,
+  updateSurveyStatusSchema
 } from '../../schemas/surveySchema';
 
 const router = Router();
+
+// Mount AI Decision & Analytics sub-router for collectors
+router.use('/:surveyId/ai', aiRoutes);
+router.use('/:id/ai', aiRoutes);
 
 router.post(
   '/',
@@ -37,6 +43,20 @@ router.put(
   '/:id',
   authenticate,
   validate({ body: updateSurveySchema }),
+  updateSurvey
+);
+
+router.patch(
+  '/:id',
+  authenticate,
+  validate({ body: updateSurveySchema }),
+  updateSurvey
+);
+
+router.patch(
+  '/:id/status',
+  authenticate,
+  validate({ body: updateSurveyStatusSchema }),
   updateSurvey
 );
 

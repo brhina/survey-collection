@@ -17,6 +17,7 @@ export class SurveyService {
     const surveyPayload: Partial<ISurvey> = {
       title: input.title,
       description: input.description,
+      category: input.category || 'general',
       status: input.status || 'published',
       settings: input.settings || {
         isAnonymous: false,
@@ -32,13 +33,33 @@ export class SurveyService {
 
   async getSurveys(query: SurveyQueryInput, user?: IAuthUser): Promise<PaginatedResult<ISurvey> | ISurvey[]> {
     if (query.all) {
-      return surveyRepository.findAllActive();
+      const filter: Record<string, unknown> = {};
+      if (query.status) {
+        filter.status = query.status;
+      } else if (!user) {
+        // Public request: default to published/closed surveys, never drafts
+        filter.status = { $in: ['published', 'closed'] };
+      }
+      if (query.category) {
+        filter.category = query.category;
+      }
+      if (query.search) {
+        filter.$or = [
+          { title: { $regex: query.search, $options: 'i' } },
+          { description: { $regex: query.search, $options: 'i' } }
+        ];
+      }
+      if (user && user.role !== 'admin') {
+        filter.creatorId = new Types.ObjectId(user.id);
+      }
+      return surveyRepository.findAllActive(filter);
     }
 
     return surveyRepository.findWithPagination({
       page: query.page,
       limit: query.limit,
-      status: query.status,
+      status: query.status || (!user ? 'published' : undefined),
+      category: query.category,
       search: query.search,
       creatorId: user && user.role !== 'admin' ? user.id : undefined
     });
@@ -110,14 +131,21 @@ export class SurveyService {
     }
 
     const updatePayload: Partial<ISurvey> = {};
-    if (input.title) updatePayload.title = input.title;
-    if (input.description) updatePayload.description = input.description;
-    if (input.status) updatePayload.status = input.status;
-    if (input.settings) updatePayload.settings = input.settings;
+    if (input.title !== undefined) updatePayload.title = input.title;
+    if (input.description !== undefined) updatePayload.description = input.description;
+    if (input.category !== undefined) updatePayload.category = input.category;
+    if (input.status !== undefined) updatePayload.status = input.status;
+    if (input.settings !== undefined) {
+      updatePayload.settings = {
+        ...(existing.settings || {}),
+        ...input.settings
+      };
+    }
 
     if (input.questions) {
       updatePayload.questions = input.questions.map((q, idx) => ({
         ...q,
+        _id: q._id && Types.ObjectId.isValid(q._id) ? new Types.ObjectId(q._id) : new Types.ObjectId(),
         order: q.order !== undefined && q.order !== null ? q.order : idx,
         options: ['multiple-choice', 'checkbox', 'dropdown'].includes(q.type)
           ? (q.options || []).filter(opt => opt && opt.trim().length > 0)

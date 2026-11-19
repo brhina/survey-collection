@@ -54,21 +54,27 @@ export const surveySettingsSchema = z.object({
   closesAt: z.coerce.date().nullable().optional()
 });
 
+export const surveyStatusEnum = z.enum(['draft', 'published', 'closed', 'archived']);
+
 export const createSurveySchema = z.object({
   title: z.string().min(1, 'Survey title is required').max(200).trim(),
   description: z.string().min(1, 'Survey description is required').max(2000).trim(),
   category: collectorCategoryEnum.optional().default('general'),
-  status: z.enum(['draft', 'published', 'closed', 'archived']).optional().default('published'),
+  status: surveyStatusEnum.optional().default('published'),
   settings: surveySettingsSchema.optional(),
   questions: z.array(questionInputSchema).min(1, 'Survey must include at least one question')
 });
 
 export const updateSurveySchema = createSurveySchema.partial();
 
+export const updateSurveyStatusSchema = z.object({
+  status: surveyStatusEnum
+});
+
 export const surveyQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),
   limit: z.coerce.number().int().min(1).max(100).optional().default(10),
-  status: z.enum(['draft', 'published', 'closed', 'archived']).optional(),
+  status: surveyStatusEnum.optional(),
   category: collectorCategoryEnum.optional(),
   search: z.string().trim().optional(),
   all: z.coerce.boolean().optional()
@@ -76,4 +82,5 @@ export const surveyQuerySchema = z.object({
 
 export type CreateSurveyInput = z.infer<typeof createSurveySchema>;
 export type UpdateSurveyInput = z.infer<typeof updateSurveySchema>;
+export type UpdateSurveyStatusInput = z.infer<typeof updateSurveyStatusSchema>;
 export type SurveyQueryInput = z.infer<typeof surveyQuerySchema>;
